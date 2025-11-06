@@ -94,7 +94,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
 
   useEffect(() => {
     chatStore.setKey('started', initialMessages.length > 0);
-  }, []);
+  }, [initialMessages.length]);
 
   useEffect(() => {
     parseMessages(messages, isLoading);
@@ -102,7 +102,7 @@ export const ChatImpl = memo(({ initialMessages, storeMessageHistory }: ChatProp
     if (messages.length > initialMessages.length) {
       storeMessageHistory(messages).catch((error) => toast.error(error.message));
     }
-  }, [messages, isLoading, parseMessages]);
+  }, [messages, isLoading, parseMessages, initialMessages.length, storeMessageHistory]);
 
   const scrollTextArea = () => {
     const textarea = textareaRef.current;

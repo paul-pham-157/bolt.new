@@ -16,54 +16,54 @@ export function usePromptEnhancer() {
     setEnhancingPrompt(true);
     setPromptEnhanced(false);
 
-    const response = await fetch('/api/enhancer', {
-      method: 'POST',
-      body: JSON.stringify({
-        message: input,
-      }),
-    });
-
-    const reader = response.body?.getReader();
-
     const originalInput = input;
 
-    if (reader) {
-      const decoder = new TextDecoder();
+    try {
+      const response = await fetch('/api/enhancer', {
+        method: 'POST',
+        body: JSON.stringify({
+          message: input,
+        }),
+      });
 
-      let _input = '';
-      let _error;
-
-      try {
-        setInput('');
-
-        while (true) {
-          const { value, done } = await reader.read();
-
-          if (done) {
-            break;
-          }
-
-          _input += decoder.decode(value);
-
-          logger.trace('Set input', _input);
-
-          setInput(_input);
-        }
-      } catch (error) {
-        _error = error;
-        setInput(originalInput);
-      } finally {
-        if (_error) {
-          logger.error(_error);
-        }
-
-        setEnhancingPrompt(false);
-        setPromptEnhanced(true);
-
-        setTimeout(() => {
-          setInput(_input);
-        });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
+
+      const reader = response.body?.getReader();
+
+      if (reader) {
+        const decoder = new TextDecoder();
+
+        let _input = '';
+
+        try {
+          setInput('');
+
+          while (true) {
+            const { value, done } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            _input += decoder.decode(value);
+
+            logger.trace('Set input', _input);
+
+            setInput(_input);
+          }
+        } catch (error) {
+          logger.error('Failed to read enhanced prompt stream:', error);
+          setInput(originalInput);
+        }
+      }
+    } catch (error) {
+      logger.error('Failed to enhance prompt:', error);
+      setInput(originalInput);
+    } finally {
+      setEnhancingPrompt(false);
+      setPromptEnhanced(true);
     }
   };
 

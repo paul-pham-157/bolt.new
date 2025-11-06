@@ -49,7 +49,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.error('Chat API error:', error);
 
     throw new Response(null, {
       status: 500,

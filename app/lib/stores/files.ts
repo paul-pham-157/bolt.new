@@ -138,7 +138,7 @@ export class FilesStore {
         case 'remove_dir': {
           this.files.setKey(sanitizedPath, undefined);
 
-          for (const [direntPath] of Object.entries(this.files)) {
+          for (const [direntPath] of Object.entries(this.files.get())) {
             if (direntPath.startsWith(sanitizedPath)) {
               this.files.setKey(direntPath, undefined);
             }
@@ -191,7 +191,7 @@ export class FilesStore {
     try {
       return utf8TextDecoder.decode(buffer);
     } catch (error) {
-      console.log(error);
+      logger.error('Failed to decode file content:', error);
       return '';
     }
   }

@@ -132,19 +132,29 @@ export class ActionRunner {
       env: { npm_config_yes: true },
     });
 
-    action.abortSignal.addEventListener('abort', () => {
+    const abortHandler = () => {
       process.kill();
-    });
+    };
+
+    action.abortSignal.addEventListener('abort', abortHandler);
 
     process.output.pipeTo(
       new WritableStream({
         write(data) {
           console.log(data);
         },
+        abort(err) {
+          logger.error('Stream aborted:', err);
+        },
       }),
-    );
+    ).catch((error) => {
+      logger.error('Failed to pipe output:', error);
+    });
 
     const exitCode = await process.exit;
+
+    // Clean up the event listener to prevent memory leak
+    action.abortSignal.removeEventListener('abort', abortHandler);
 
     logger.debug(`Process terminated with code ${exitCode}`);
   }
@@ -167,6 +177,7 @@ export class ActionRunner {
         logger.debug('Created folder', folder);
       } catch (error) {
         logger.error('Failed to create folder\n\n', error);
+        throw error;
       }
     }
 
@@ -175,6 +186,7 @@ export class ActionRunner {
       logger.debug(`File written ${action.filePath}`);
     } catch (error) {
       logger.error('Failed to write file\n\n', error);
+      throw error;
     }
   }
 

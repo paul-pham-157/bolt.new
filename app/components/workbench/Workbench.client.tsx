@@ -69,7 +69,7 @@ export const Workbench = memo(({ chatStarted, isStreaming }: WorkspaceProps) => 
 
   useEffect(() => {
     if (hasPreview) {
-      setSelectedView('preview');
+      workbenchStore.currentView.set('preview');
     }
   }, [hasPreview]);
 

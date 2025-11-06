@@ -24,6 +24,14 @@ export const Terminal = memo(
   forwardRef<TerminalRef, TerminalProps>(({ className, theme, readonly, onTerminalReady, onTerminalResize }, ref) => {
     const terminalElementRef = useRef<HTMLDivElement>(null);
     const terminalRef = useRef<XTerm>();
+    const onTerminalResizeRef = useRef(onTerminalResize);
+    const onTerminalReadyRef = useRef(onTerminalReady);
+
+    // Keep refs up to date
+    useEffect(() => {
+      onTerminalResizeRef.current = onTerminalResize;
+      onTerminalReadyRef.current = onTerminalReady;
+    });
 
     useEffect(() => {
       const element = terminalElementRef.current!;
@@ -48,20 +56,20 @@ export const Terminal = memo(
 
       const resizeObserver = new ResizeObserver(() => {
         fitAddon.fit();
-        onTerminalResize?.(terminal.cols, terminal.rows);
+        onTerminalResizeRef.current?.(terminal.cols, terminal.rows);
       });
 
       resizeObserver.observe(element);
 
       logger.info('Attach terminal');
 
-      onTerminalReady?.(terminal);
+      onTerminalReadyRef.current?.(terminal);
 
       return () => {
         resizeObserver.disconnect();
         terminal.dispose();
       };
-    }, []);
+    }, [readonly]);
 
     useEffect(() => {
       const terminal = terminalRef.current!;
@@ -79,7 +87,7 @@ export const Terminal = memo(
           terminal.options.theme = getTerminalTheme(readonly ? { cursor: '#00000000' } : {});
         },
       };
-    }, []);
+    }, [readonly]);
 
     return <div className={className} ref={terminalElementRef} />;
   }),
